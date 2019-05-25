@@ -1,6 +1,6 @@
 package server;
 
-import interfaces.AFSI;
+import interfaces.Vice;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -13,16 +13,16 @@ public class Main {
     public static void main(String args[]) {
         try {
             // Instantiating the implementation class
-            AFSI obj = new AFS();
+            Vice obj = new ViceImpl();
 
             // Exporting the object of implementation class (here we are exporting the remote object to the stub)
-            AFSI stub = (AFS) UnicastRemoteObject.exportObject(obj, 0);
+            Vice stub = (ViceImpl) UnicastRemoteObject.exportObject(obj, 0);
 
             // Binding the remote object (stub) in the registry
             LocateRegistry.createRegistry(1099);
             Registry registry = LocateRegistry.getRegistry();
 
-            registry.bind("AFS", stub);
+            registry.bind("ViceImpl", stub);
 
             System.err.println("Server ready");
         } catch (Exception e) {

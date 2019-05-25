@@ -1,8 +1,8 @@
 package server;
 
-import interfaces.AFSI;
+import interfaces.Vice;
 
-public class AFS implements AFSI {
+public class ViceImpl implements Vice {
 
     //TODO: metodos del sistema de archivos. Los metodos tienen que tirar RemoteException
 

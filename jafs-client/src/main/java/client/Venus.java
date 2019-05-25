@@ -1,21 +1,21 @@
 package client;
 
-import interfaces.AFSI;
+import interfaces.Vice;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
-public class Main {
+public class Venus {
 
-    private static AFSI stub = null;
+    private static Vice stub = null;
 
     public static void main(String[] args) throws RemoteException {
 
         Registry registry = LocateRegistry.getRegistry();
         try {
-            stub = (AFSI) registry.lookup("Prism");
+            stub = (Vice) registry.lookup("Prism");
         } catch (NotBoundException e) {
 
         }
