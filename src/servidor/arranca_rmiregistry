@@ -1,0 +1,5 @@
+#!/bin/sh
+
+set -x
+
+CLASSPATH=.:afs_servidor.jar  rmiregistry $*
