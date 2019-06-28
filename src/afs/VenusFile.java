@@ -6,111 +6,143 @@ import java.rmi.*;
 import java.io.*; 
 
 public class VenusFile {
+
     public static final String cacheDir = "Cache/";
-    RandomAccessFile rnd;
-    ViceWriter escritor;
-    ViceReader lector;
+
+    RandomAccessFile raf;
+    ViceWriter writer;
+    ViceReader reader;
     String modo;
     Venus ven;
     String file;
+    private long sizeB;
     private boolean escrito;
-    private long tam_mod;
+
     public VenusFile(Venus venus, String fileName, String mode) throws RemoteException, IOException, FileNotFoundException {
+        
         try{
-            this.ven=venus;
+            
+            this.ven = venus;
             this.modo = mode;
-            this.file=fileName;
+            this.file = fileName;
             this.escrito = false;
+
             if(mode.equals("rw")){
+                
                 if(!buscar(file)){
-                    rnd = new RandomAccessFile(cacheDir+fileName,mode);
-                    lector = venus.rec.download(fileName,mode,ven.callback);
+
+                    raf = new RandomAccessFile(cacheDir+fileName,mode);
+                    reader = venus.cl.download(fileName,mode,ven.callback);
                     byte [] leidos;
-                    while((leidos = lector.read(Integer.parseInt(venus.tam))) != null){
-                        rnd.write(leidos);
+                    
+                    while((leidos = reader.read(Integer.parseInt(venus.size))) != null){
+                        raf.write(leidos);
                     }
-                    rnd.seek(0);
-                    lector.close();
+                    
+                    raf.seek(0);
+                    reader.close();
                 }
                 else{
-                    rnd = new RandomAccessFile(cacheDir+fileName,mode);
+                    
+                    raf = new RandomAccessFile(cacheDir+fileName,mode);
                 }
-                this.tam_mod = rnd.length();
+                this.sizeB = raf.length();
             }
             else{
-                rnd = new RandomAccessFile(cacheDir+fileName,mode);
+                
+                raf = new RandomAccessFile(cacheDir+fileName,mode);
             }
         }
         catch(FileNotFoundException e){
-            lector = venus.rec.download(fileName,mode,ven.callback);
-            rnd = new RandomAccessFile(cacheDir+fileName,"rw");
+            
+            reader = venus.cl.download(fileName,mode,ven.callback);
+            raf = new RandomAccessFile(cacheDir+fileName,"rw");
             byte [] leidos;
-            while((leidos = lector.read(Integer.parseInt(venus.tam))) != null){
-                rnd.write(leidos);
+            
+            while((leidos = reader.read(Integer.parseInt(venus.size))) != null){
+                raf.write(leidos);
             }
-            rnd.close();
-            rnd = new RandomAccessFile(cacheDir+fileName, "r");
-            lector.close();
+            
+            raf.close();
+            raf = new RandomAccessFile(cacheDir+fileName, "r");
+            reader.close();
         }
     }
-    private boolean buscar(String filename){
+
+    private boolean search(String filename){
+
         try{
-            File cache = new File("Cache");
-            for(File f: cache.listFiles()){
-                if(f.getName().equals(filename)){
+
+            File cacheFiles = new File("Cache");
+
+            for(File fileN: cacheFiles.listFiles()){
+
+                if(fileN.getName().equals(filename)){
+
                     return true;
                 }
             }
         }catch(Exception e){
+
             e.printStackTrace();
         }
+
         return false;
     }
+
     public int read(byte[] b) throws RemoteException, IOException {
-        return rnd.read(b);
+
+        return raf.read(b);
     }
+
     public void write(byte[] b) throws RemoteException, IOException {
+
         escrito = true;
-        rnd.write(b);
+        raf.write(b);
         return;
     }
+
     public void seek(long p) throws RemoteException, IOException {
-        rnd.seek(p);
+
+        raf.seek(p);
         return;
     }
+
     public void setLength(long l) throws RemoteException, IOException {
-        rnd.setLength(l);
+
+        raf.setLength(l);
         return;
     }
+
     public void close() throws RemoteException, IOException {
+
         if(this.modo.equals("rw")){
             if(this.escrito == true){
-                rnd.seek(0);
-                byte [] leidos = new byte[Integer.parseInt(ven.tam)];
+                raf.seek(0);
+                byte [] leidos = new byte[Integer.parseInt(ven.size)];
                 int leido = 0;
-                escritor = ven.rec.upload(file,modo,ven.callback);
-                while((leido = rnd.read(leidos)) != -1){
-                    if(leido < Integer.parseInt(ven.tam)){
+                writer = ven.cl.upload(file,modo,ven.callback);
+                while((leido = raf.read(leidos)) != -1){
+                    if(leido < Integer.parseInt(ven.size)){
                         byte [] leidos2 = new byte[leido];
                         for(int i=0;i<leido;i++) leidos2[i]=leidos[i];
-                        escritor.write(leidos2);
+                        writer.write(leidos2);
                     }
                     else{
-                        escritor.write(leidos);
+                        writer.write(leidos);
                     }
                 }
-                if(rnd.length() != this.tam_mod){
-                    escritor.setLength(rnd.length());
+                if(raf.length() != this.sizeB){
+                    writer.setLength(raf.length());
                 }
-                escritor.close();
+                writer.close();
             }
-            else if(rnd.length() != this.tam_mod){
-                escritor = ven.rec.upload(file,modo,ven.callback);
-                escritor.setLength(rnd.length());
-                escritor.close();
+            else if(raf.length() != this.sizeB){
+                writer = ven.cl.upload(file,modo,ven.callback);
+                writer.setLength(raf.length());
+                writer.close();
             }
         }
-        rnd.close();
+        raf.close();
     }
 }
-
