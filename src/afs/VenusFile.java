@@ -19,40 +19,50 @@ public class VenusFile {
     private boolean escrito;
 
     public VenusFile(Venus venus, String fileName, String mode) throws RemoteException, IOException, FileNotFoundException {
+        
         try{
+            
             this.ven = venus;
             this.modo = mode;
             this.file = fileName;
             this.escrito = false;
 
             if(mode.equals("rw")){
+                
                 if(!buscar(file)){
 
                     raf = new RandomAccessFile(cacheDir+fileName,mode);
                     reader = venus.cl.download(fileName,mode,ven.callback);
                     byte [] leidos;
+                    
                     while((leidos = reader.read(Integer.parseInt(venus.size))) != null){
                         raf.write(leidos);
                     }
+                    
                     raf.seek(0);
                     reader.close();
                 }
                 else{
+                    
                     raf = new RandomAccessFile(cacheDir+fileName,mode);
                 }
                 this.sizeB = raf.length();
             }
             else{
+                
                 raf = new RandomAccessFile(cacheDir+fileName,mode);
             }
         }
         catch(FileNotFoundException e){
+            
             reader = venus.cl.download(fileName,mode,ven.callback);
             raf = new RandomAccessFile(cacheDir+fileName,"rw");
             byte [] leidos;
+            
             while((leidos = reader.read(Integer.parseInt(venus.size))) != null){
                 raf.write(leidos);
             }
+            
             raf.close();
             raf = new RandomAccessFile(cacheDir+fileName, "r");
             reader.close();
