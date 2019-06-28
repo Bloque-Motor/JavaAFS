@@ -1,43 +1,41 @@
-// Implementación de la interfaz de servidor que define los métodos remotos
-// para completar la descarga de un fichero
 package afs;
 import java.rmi.*;
-import java.rmi.server.*;
 import java.io.*;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.Arrays;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ViceReaderImpl extends UnicastRemoteObject implements ViceReader {
-    private static final String AFSDir = "AFSDir/";
-    RandomAccessFile rnd;
-    ViceImpl lock;
-    ReentrantReadWriteLock cerr;
-    String file;
+    private static final String directory = "AFSDir/";
+    private RandomAccessFile randomAccessFile;
+    private ViceImpl vice;
+    private ReentrantReadWriteLock reentrantReadWriteLock;
+    private String fileName;
 
-    public ViceReaderImpl(String fileName, String mode,ViceImpl vc,ReentrantReadWriteLock cerrojo)
-		    throws RemoteException,FileNotFoundException {
-                rnd = new RandomAccessFile(AFSDir+fileName,mode);
-                lock = vc;
-                cerr = cerrojo;
-                file = fileName;
+    public ViceReaderImpl(String fileName, String mode, ViceImpl vice, ReentrantReadWriteLock reentrantReadWriteLock) throws RemoteException,FileNotFoundException {
+        this.fileName = fileName;
+        this.vice = vice;
+        this.reentrantReadWriteLock = reentrantReadWriteLock;
+        randomAccessFile = new RandomAccessFile(directory + fileName, mode);
     }
-    public byte[] read(int tam) throws RemoteException,IOException {
-        byte [] buf = new byte[tam];
-        int leido = rnd.read(buf);
-        if(leido == -1){
-            cerr.readLock().unlock();
+
+    public byte[] read(int bufferSize) throws IOException {
+        byte [] readBuffer = new byte[bufferSize];
+        int readCount = randomAccessFile.read(readBuffer);
+        if(readCount == -1){
+            reentrantReadWriteLock.readLock().unlock();
             return null;
         }
-        else if(leido < tam){
-            byte [] leidos2 = new byte[leido];
-            for(int i=0;i<leido;i++) leidos2[i]=buf[i];
-            return leidos2;
+        
+        if(readCount < bufferSize){
+            return Arrays.copyOf(readBuffer, readCount);
         }
-        return buf;
+        return readBuffer;
     }
-    public void close() throws RemoteException,IOException {
-        //cerr.readLock().unlock();
-        lock.lock.unbind(file);
-        rnd.close();
+
+    public void close() throws IOException {
+        vice.lock.unbind(this.fileName);
+        randomAccessFile.close();
         return;
     }
 }   
