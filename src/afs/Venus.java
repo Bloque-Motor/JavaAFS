@@ -4,7 +4,6 @@ package afs;
 
 import java.rmi.*; 
 
-
 public class Venus {
 
     private String host;
