@@ -6,11 +6,11 @@ import java.rmi.*;
 
 public class Venus {
 
-    private String host;
-    private String port;
-    private Vice cl;
-    private String size;
-    private VenusCB callback;
+    public String host;
+    public String port;
+    public Vice cl;
+    public String size;
+    public VenusCB callback;
 
     public Venus() throws Exception{
 
