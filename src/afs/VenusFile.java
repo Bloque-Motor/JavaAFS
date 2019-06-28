@@ -9,140 +9,130 @@ public class VenusFile {
 
     public static final String cacheDir = "Cache/";
 
-    RandomAccessFile raf;
-    ViceWriter writer;
-    ViceReader reader;
-    String modo;
-    Venus ven;
-    String file;
+    RandomAccessFile randomAccessFile;
+    ViceWriter viceWriter;
+    ViceReader viceReader;
+    String mode;
+    Venus venus;
+    String fileName;
     private long sizeB;
-    private boolean escrito;
+    private boolean written;
 
-    public VenusFile(Venus venus, String fileName, String mode) throws RemoteException, IOException, FileNotFoundException {
-        
+
+    //TODO: Refactor
+    public VenusFile(Venus venus, String fileName, String mode) throws IOException {
+
         try{
-            
-            this.ven = venus;
-            this.modo = mode;
-            this.file = fileName;
-            this.escrito = false;
+            this.venus = venus;
+            this.mode = mode;
+            this.fileName = fileName;
+            this.written = false;
 
             if(mode.equals("rw")){
                 
-                if(!buscar(file)){
-
-                    raf = new RandomAccessFile(cacheDir+fileName,mode);
-                    reader = venus.cl.download(fileName,mode,ven.callback);
+                if(!search(this.fileName)){
+                    randomAccessFile = new RandomAccessFile(cacheDir + fileName, mode);
+                    viceReader = venus.cl.download(fileName,mode, this.venus.callback);
                     byte [] leidos;
                     
-                    while((leidos = reader.read(Integer.parseInt(venus.size))) != null){
-                        raf.write(leidos);
+                    while((leidos = viceReader.read(Integer.parseInt(venus.size))) != null){
+                        randomAccessFile.write(leidos);
                     }
                     
-                    raf.seek(0);
-                    reader.close();
+                    randomAccessFile.seek(0);
+                    viceReader.close();
                 }
                 else{
                     
-                    raf = new RandomAccessFile(cacheDir+fileName,mode);
+                    randomAccessFile = new RandomAccessFile(cacheDir+fileName,mode);
                 }
-                this.sizeB = raf.length();
+                this.sizeB = randomAccessFile.length();
             }
             else{
                 
-                raf = new RandomAccessFile(cacheDir+fileName,mode);
+                randomAccessFile = new RandomAccessFile(cacheDir+fileName,mode);
             }
         }
         catch(FileNotFoundException e){
             
-            reader = venus.cl.download(fileName,mode,ven.callback);
-            raf = new RandomAccessFile(cacheDir+fileName,"rw");
+            viceReader = venus.cl.download(fileName,mode, this.venus.callback);
+            randomAccessFile = new RandomAccessFile(cacheDir+fileName,"rw");
             byte [] leidos;
             
-            while((leidos = reader.read(Integer.parseInt(venus.size))) != null){
-                raf.write(leidos);
+            while((leidos = viceReader.read(Integer.parseInt(venus.size))) != null){
+                randomAccessFile.write(leidos);
             }
             
-            raf.close();
-            raf = new RandomAccessFile(cacheDir+fileName, "r");
-            reader.close();
+            randomAccessFile.close();
+            randomAccessFile = new RandomAccessFile(cacheDir+fileName, "r");
+            viceReader.close();
         }
     }
 
     private boolean search(String filename){
-
         try{
-
             File cacheFiles = new File("Cache");
-
-            for(File fileN: cacheFiles.listFiles()){
-
-                if(fileN.getName().equals(filename)){
-
+            for (File file: cacheFiles.listFiles()){
+                if(filename.equals(file.getName())){
                     return true;
                 }
             }
         }catch(Exception e){
-
             e.printStackTrace();
         }
-
         return false;
     }
 
-    public int read(byte[] b) throws RemoteException, IOException {
-
-        return raf.read(b);
+    public int read(byte[] output) throws IOException {
+        return randomAccessFile.read(output);
     }
 
-    public void write(byte[] b) throws RemoteException, IOException {
-
-        escrito = true;
-        raf.write(b);
+    public void write(byte[] input) throws IOException {
+        written = true;
+        randomAccessFile.write(input);
         return;
     }
 
-    public void seek(long p) throws RemoteException, IOException {
-
-        raf.seek(p);
+    public void seek(long position) throws IOException {
+        randomAccessFile.seek(position);
         return;
     }
 
-    public void setLength(long l) throws RemoteException, IOException {
-
-        raf.setLength(l);
+    public void setLength(long length) throws IOException {
+        randomAccessFile.setLength(length);
         return;
     }
 
-    public void close() throws RemoteException, IOException {
 
-        if(this.modo.equals("rw")){
-            if(this.escrito == true){
-                raf.seek(0);
-                byte [] leidos = new byte[Integer.parseInt(ven.size)];
-                int leido = 0;
-                writer = ven.cl.upload(file,modo,ven.callback);
-                while((leido = raf.read(leidos)) != -1){
-                    if(leido < Integer.parseInt(ven.size)){
-                        byte [] leidos2 = new byte[leido];
-                        for(int i=0;i<leido;i++) leidos2[i]=leidos[i];
-                        writer.write(leidos2);
+    //TODO: Refactor
+    public void close() throws IOException {
+        if(mode.equals("rw")){
+            if(written){
+                randomAccessFile.seek(0);
+                byte [] read = new byte[Integer.parseInt(venus.size)];
+                int readCount = 0;
+                viceWriter = venus.cl.upload(fileName, mode, venus.callback);
+                while((readCount = randomAccessFile.read(read)) != -1){
+                    if(readCount < Integer.parseInt(venus.size)){
+                        byte [] leidos2 = new byte[readCount];
+                        for(int i=0;i<readCount;i++) leidos2[i]=read[i];
+                        viceWriter.write(leidos2);
                     }
                     else{
-                        writer.write(leidos);
+                        viceWriter.write(read);
                     }
                 }
-                if(raf.length() != this.sizeB){
-                    writer.setLength(raf.length());
+                if(randomAccessFile.length() != this.sizeB){
+                    viceWriter.setLength(randomAccessFile.length());
                 }
-                writer.close();
+                viceWriter.close();
             }
-            else if(raf.length() != this.sizeB){
-                writer = ven.cl.upload(file,modo,ven.callback);
-                writer.setLength(raf.length());
-                writer.close();
+            else if(randomAccessFile.length() != this.sizeB){
+                viceWriter = venus.cl.upload(fileName, mode, venus.callback);
+                viceWriter.setLength(randomAccessFile.length());
+                viceWriter.close();
             }
         }
-        raf.close();
+        randomAccessFile.close();
     }
 }

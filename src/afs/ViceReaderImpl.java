@@ -34,7 +34,7 @@ public class ViceReaderImpl extends UnicastRemoteObject implements ViceReader {
     }
 
     public void close() throws IOException {
-        vice.lock.unbind(this.fileName);
+        vice.getLockManager().unbind(this.fileName);
         randomAccessFile.close();
         return;
     }

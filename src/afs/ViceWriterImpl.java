@@ -25,15 +25,15 @@ public class ViceWriterImpl extends UnicastRemoteObject implements ViceWriter {
         return;
     }
 
-    public void write(byte[] b) throws IOException {
-        randomAccessFile.write(b);
+    public void write(byte[] input) throws IOException {
+        randomAccessFile.write(input);
         return;
     }
 
     public void close() throws IOException {
-        vice.recorrer(fileName,venusCallback);
+        vice.close(fileName, venusCallback);
         reentrantReadWriteLock.writeLock().unlock();
-        vice.lock.unbind(fileName);
+        vice.getLockManager().unbind(fileName);
         randomAccessFile.close();
         return;
     }
