@@ -6,17 +6,19 @@ import java.rmi.*;
 
 
 public class Venus {
-    public String host;
-    public String port;
-    public String tam;
-    public Vice rec;
-    public VenusCB callback;
+
+    private String host;
+    private String port;
+    private Vice cl;
+    private String size;
+    private VenusCB callback;
 
     public Venus() throws Exception{
+
         this.host = System.getenv().get("REGISTRY_HOST");
         this.port = System.getenv().get("REGISTRY_PORT");
-        this.tam = System.getenv().get("BLOCKSIZE");
-        rec = (Vice)Naming.lookup("rmi://"+ this.host + ":" + this.port +"/AFS");
+        cl = (Vice)Naming.lookup("rmi://"+ this.host + ":" + this.port +"/AFS");
+        this.size = System.getenv().get("BLOCKSIZE");
         callback = new VenusCBImpl();
     }
 }
