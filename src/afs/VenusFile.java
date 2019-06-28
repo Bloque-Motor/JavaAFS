@@ -15,7 +15,7 @@ public class VenusFile {
     String modo;
     Venus ven;
     String file;
-    private long tam_mod;
+    private long sizeB;
     private boolean escrito;
 
     public VenusFile(Venus venus, String fileName, String mode) throws RemoteException, IOException, FileNotFoundException {
@@ -40,7 +40,7 @@ public class VenusFile {
                 else{
                     raf = new RandomAccessFile(cacheDir+fileName,mode);
                 }
-                this.tam_mod = raf.length();
+                this.sizeB = raf.length();
             }
             else{
                 raf = new RandomAccessFile(cacheDir+fileName,mode);
@@ -122,12 +122,12 @@ public class VenusFile {
                         writer.write(leidos);
                     }
                 }
-                if(raf.length() != this.tam_mod){
+                if(raf.length() != this.sizeB){
                     writer.setLength(raf.length());
                 }
                 writer.close();
             }
-            else if(raf.length() != this.tam_mod){
+            else if(raf.length() != this.sizeB){
                 writer = ven.cl.upload(file,modo,ven.callback);
                 writer.setLength(raf.length());
                 writer.close();
