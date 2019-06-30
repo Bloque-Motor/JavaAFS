@@ -51,10 +51,12 @@ public class VenusFile {
 
     private boolean search(String filename){
         try{
-            File cacheFiles = new File("Cache");
-            for (File file: cacheFiles.listFiles()){
-                if(filename.equals(file.getName())){
-                    return true;
+            File cacheFiles = new File(CACHE_DIR);
+            if (cacheFiles.isDirectory()) {
+                for (File file: cacheFiles.listFiles()){
+                    if(filename.equals(file.getName())){
+                        return true;
+                    }
                 }
             }
         }catch(Exception e){
