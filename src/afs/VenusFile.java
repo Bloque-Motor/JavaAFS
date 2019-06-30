@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Arrays;
 
 public class VenusFile {
 
@@ -12,7 +13,7 @@ public class VenusFile {
     private String mode;
     private Venus venus;
     private String fileName;
-    private long sizeB;
+    private long fileSize;
     private boolean written;
 
 
@@ -33,7 +34,7 @@ public class VenusFile {
                     }
                     randomAccessFile.seek(0);
                 }
-                this.sizeB = randomAccessFile.length();
+                this.fileSize = randomAccessFile.length();
             }
         }
         catch(FileNotFoundException e){
@@ -79,36 +80,30 @@ public class VenusFile {
         randomAccessFile.setLength(length);
     }
 
-
-    //TODO: Refactor
     public void close() throws IOException {
         if(mode.equals("rw")){
-            ViceWriter viceWriter;
+            ViceWriter viceWriter = null;
             if(written){
                 randomAccessFile.seek(0);
                 byte [] read = new byte[venus.getSize()];
-                int readCount = 0;
+                int readCount;
                 viceWriter = venus.getVice().upload(fileName, mode, venus.getVenusCB());
                 while((readCount = randomAccessFile.read(read)) != -1){
-                    if(readCount < venus.getSize()){
-                        byte [] leidos2 = new byte[readCount];
-                        for(int i=0;i<readCount;i++) leidos2[i]=read[i];
-                        viceWriter.write(leidos2);
-                    }
-                    else{
+                    if(venus.getSize() > readCount){
+                        viceWriter.write(Arrays.copyOf(read, readCount));
+                    } else{
                         viceWriter.write(read);
                     }
                 }
-                if(randomAccessFile.length() != this.sizeB){
+                if(randomAccessFile.length() != fileSize){
                     viceWriter.setLength(randomAccessFile.length());
                 }
-                viceWriter.close();
             }
-            else if(randomAccessFile.length() != this.sizeB){
+            else if(randomAccessFile.length() != fileSize){
                 viceWriter = venus.getVice().upload(fileName, mode, venus.getVenusCB());
                 viceWriter.setLength(randomAccessFile.length());
-                viceWriter.close();
             }
+            if (viceWriter != null) viceWriter.close();
         }
         randomAccessFile.close();
     }
