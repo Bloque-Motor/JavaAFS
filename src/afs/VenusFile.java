@@ -1,72 +1,51 @@
-// Clase de cliente que define la interfaz a las aplicaciones.
-// Proporciona la misma API que RandomAccessFile.
 package afs;
 
-import java.rmi.*; 
-import java.io.*; 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 
 public class VenusFile {
 
-    public static final String cacheDir = "Cache/";
-
-    RandomAccessFile randomAccessFile;
-    ViceWriter viceWriter;
-    ViceReader viceReader;
-    String mode;
-    Venus venus;
-    String fileName;
+    private static final String CACHE_DIR = "Cache/";
+    private RandomAccessFile randomAccessFile;
+    private String mode;
+    private Venus venus;
+    private String fileName;
     private long sizeB;
     private boolean written;
 
 
-    //TODO: Refactor
     public VenusFile(Venus venus, String fileName, String mode) throws IOException {
-
+        ViceReader viceReader;
+        this.venus = venus;
+        this.mode = mode;
+        this.fileName = fileName;
+        this.written = false;
+        randomAccessFile = new RandomAccessFile(CACHE_DIR + fileName, mode);
+        viceReader = venus.getVice().download(fileName, mode, this.venus.getVenusCB());
         try{
-            this.venus = venus;
-            this.mode = mode;
-            this.fileName = fileName;
-            this.written = false;
-
             if(mode.equals("rw")){
-                
                 if(!search(this.fileName)){
-                    randomAccessFile = new RandomAccessFile(cacheDir + fileName, mode);
-                    viceReader = venus.cl.download(fileName,mode, this.venus.callback);
-                    byte [] leidos;
-                    
-                    while((leidos = viceReader.read(Integer.parseInt(venus.size))) != null){
-                        randomAccessFile.write(leidos);
+                    byte [] readBytes;
+                    while((readBytes = viceReader.read(venus.getSize())) != null){
+                        randomAccessFile.write(readBytes);
                     }
-                    
                     randomAccessFile.seek(0);
-                    viceReader.close();
-                }
-                else{
-                    
-                    randomAccessFile = new RandomAccessFile(cacheDir+fileName,mode);
                 }
                 this.sizeB = randomAccessFile.length();
             }
-            else{
-                
-                randomAccessFile = new RandomAccessFile(cacheDir+fileName,mode);
-            }
         }
         catch(FileNotFoundException e){
-            
-            viceReader = venus.cl.download(fileName,mode, this.venus.callback);
-            randomAccessFile = new RandomAccessFile(cacheDir+fileName,"rw");
-            byte [] leidos;
-            
-            while((leidos = viceReader.read(Integer.parseInt(venus.size))) != null){
-                randomAccessFile.write(leidos);
+            randomAccessFile = new RandomAccessFile(CACHE_DIR + fileName,"rw");
+            byte [] readBytes;
+            while((readBytes = viceReader.read(venus.getSize())) != null){
+                randomAccessFile.write(readBytes);
             }
-            
             randomAccessFile.close();
-            randomAccessFile = new RandomAccessFile(cacheDir+fileName, "r");
-            viceReader.close();
+            randomAccessFile = new RandomAccessFile(CACHE_DIR + fileName, "r");
         }
+        viceReader.close();
     }
 
     private boolean search(String filename){
@@ -90,30 +69,28 @@ public class VenusFile {
     public void write(byte[] input) throws IOException {
         written = true;
         randomAccessFile.write(input);
-        return;
     }
 
     public void seek(long position) throws IOException {
         randomAccessFile.seek(position);
-        return;
     }
 
     public void setLength(long length) throws IOException {
         randomAccessFile.setLength(length);
-        return;
     }
 
 
     //TODO: Refactor
     public void close() throws IOException {
         if(mode.equals("rw")){
+            ViceWriter viceWriter;
             if(written){
                 randomAccessFile.seek(0);
-                byte [] read = new byte[Integer.parseInt(venus.size)];
+                byte [] read = new byte[venus.getSize()];
                 int readCount = 0;
-                viceWriter = venus.cl.upload(fileName, mode, venus.callback);
+                viceWriter = venus.getVice().upload(fileName, mode, venus.getVenusCB());
                 while((readCount = randomAccessFile.read(read)) != -1){
-                    if(readCount < Integer.parseInt(venus.size)){
+                    if(readCount < venus.getSize()){
                         byte [] leidos2 = new byte[readCount];
                         for(int i=0;i<readCount;i++) leidos2[i]=read[i];
                         viceWriter.write(leidos2);
@@ -128,7 +105,7 @@ public class VenusFile {
                 viceWriter.close();
             }
             else if(randomAccessFile.length() != this.sizeB){
-                viceWriter = venus.cl.upload(fileName, mode, venus.callback);
+                viceWriter = venus.getVice().upload(fileName, mode, venus.getVenusCB());
                 viceWriter.setLength(randomAccessFile.length());
                 viceWriter.close();
             }
