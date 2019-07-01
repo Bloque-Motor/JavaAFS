@@ -1,11 +1,11 @@
-package cliente1;// Cliente para probar el servicio.
+package cliente1;
 import java.util.*;
 import java.io.*;
 import afs.*;
 import java.rmi.*;
 
 class Test {
-    static byte val = 'A'; // a escribir en fichero; incrementado en cada op.
+    static byte val = 'A';
     static HashMap<Integer, VenusFile> descriptorMap = new HashMap<Integer, VenusFile>();
     static Venus venus;
     static int desc=0;
@@ -44,7 +44,7 @@ class Test {
                     res = true;
                     VenusFile f = descriptorMap.get(ID);
                     if (f ==null)
-                        System.out.println("ID de fichero inválido");
+                        System.out.println("ID de fichero invalido");
                     else {
                         byte [] buf = new byte[tam];
                         int leido = f.read(buf);
@@ -58,7 +58,7 @@ class Test {
             }
         }
         catch (IOException e) {
-            System.out.println("Excepción de E/S");
+            System.out.println("Excepcion de E/S");
         }
         return res;
     }
@@ -66,7 +66,7 @@ class Test {
     static private boolean doWrite(Scanner ent) throws RemoteException {
         boolean res = false;
         try {
-            System.out.println("Introduzca ID de fichero, cantidad a escribir y carácter que se escribirá en el fichero");
+            System.out.println("Introduzca ID de fichero, cantidad a escribir y caracter que se escribira en el fichero");
             if (!ent.hasNextLine()) return false;
             String lin = ent.nextLine();
             Scanner s = new Scanner(lin);
@@ -79,7 +79,7 @@ class Test {
                         res = true;
                         VenusFile f = descriptorMap.get(ID);
                         if (f ==null)
-                            System.out.println("ID de fichero inválido");
+                            System.out.println("ID de fichero invalido");
                         else {
                             char c = cad.charAt(0);
                             byte [] buf = new byte[tam];
@@ -92,14 +92,14 @@ class Test {
             }
         }
         catch (IOException e) {
-            System.out.println("Excepción de E/S");
+            System.out.println("Excepcion de E/S");
         }
         return res;
     }
     static private boolean doSeek(Scanner ent) throws RemoteException {
         boolean res = false;
         try {
-            System.out.println("Introduzca ID de fichero y nueva posición");
+            System.out.println("Introduzca ID de fichero y nueva posicion");
             if (!ent.hasNextLine()) return false;
             String lin = ent.nextLine();
             Scanner s = new Scanner(lin);
@@ -110,7 +110,7 @@ class Test {
                     res = true;
                     VenusFile f = descriptorMap.get(ID);
                     if (f ==null)
-                        System.out.println("ID de fichero inválido");
+                        System.out.println("ID de fichero invalido");
                     else {
                         f.seek(pos);
                         System.out.println("Puntero colocado en posicion " + pos);
@@ -119,7 +119,7 @@ class Test {
             }
         }
         catch (IOException e) {
-            System.out.println("Excepción de E/S");
+            System.out.println("Excepcion de E/S");
         }
         return res;
     }
@@ -127,7 +127,7 @@ class Test {
     static private boolean doSetLength(Scanner ent) throws RemoteException {
         boolean res = false;
         try {
-            System.out.println("Introduzca ID de fichero y nuevo tamaño");
+            System.out.println("Introduzca ID de fichero y nuevo tamano");
             if (!ent.hasNextLine()) return false;
             String lin = ent.nextLine();
             Scanner s = new Scanner(lin);
@@ -138,16 +138,16 @@ class Test {
                     res = true;
                     VenusFile f = descriptorMap.get(ID);
                     if (f ==null)
-                        System.out.println("ID de fichero inválido");
+                        System.out.println("ID de fichero invalido");
                     else {
                         f.setLength(tam);
-                        System.out.println("Nuevo tamaño del fichero: " + tam);
+                        System.out.println("Nuevo tamano del fichero: " + tam);
                     }
                }
             }
         }
         catch (IOException e) {
-            System.out.println("Excepción de E/S");
+            System.out.println("Excepcion de E/S");
         }
         return res;
     }
@@ -164,7 +164,7 @@ class Test {
                 res = true;
                 VenusFile f = descriptorMap.get(ID);
                 if (f ==null)
-                    System.out.println("ID de fichero inválido");
+                    System.out.println("ID de fichero invalido");
                 else {
                     f.close();
                     descriptorMap.remove(ID);
@@ -173,7 +173,7 @@ class Test {
              }
         }
         catch (IOException e) {
-            System.out.println("Excepción de E/S");
+            System.out.println("Excepcion de E/S");
         }
         return res;
     }

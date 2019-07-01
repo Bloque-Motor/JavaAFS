@@ -26,16 +26,14 @@ public class VenusFile {
         randomAccessFile = new RandomAccessFile(CACHE_DIR + fileName, mode);
         viceReader = venus.getVice().download(fileName, mode, this.venus.getVenusCB());
         try{
-            if(mode.equals("rw")){
-                if(!search(this.fileName)){
-                    byte [] readBytes;
-                    while((readBytes = viceReader.read(venus.getSize())) != null){
-                        randomAccessFile.write(readBytes);
-                    }
-                    randomAccessFile.seek(0);
+            if(!search(this.fileName)){
+                byte [] readBytes;
+                while((readBytes = viceReader.read(venus.getSize())) != null){
+                    randomAccessFile.write(readBytes);
                 }
-                this.fileSize = randomAccessFile.length();
+                randomAccessFile.seek(0);
             }
+            this.fileSize = randomAccessFile.length();
         }
         catch(FileNotFoundException e){
             randomAccessFile = new RandomAccessFile(CACHE_DIR + fileName,"rw");
