@@ -16,7 +16,7 @@ public class ViceWriterImpl extends UnicastRemoteObject implements ViceWriter {
         this.vice = vice;
         this.reentrantReadWriteLock = reentrantReadWriteLock;
         this.venusCallback = venusCallback;
-        randomAccessFile = new RandomAccessFile(AFSDir+fileName,mode);
+        randomAccessFile = new RandomAccessFile(AFSDir + fileName, mode);
         randomAccessFile.seek(0);
     }
 

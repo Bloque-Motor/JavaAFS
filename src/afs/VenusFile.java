@@ -34,6 +34,7 @@ public class VenusFile {
                 randomAccessFile.seek(0);
             }
             this.fileSize = randomAccessFile.length();
+            viceReader.close();
         }
         catch(FileNotFoundException e){
             randomAccessFile = new RandomAccessFile(CACHE_DIR + fileName,"rw");
@@ -43,8 +44,8 @@ public class VenusFile {
             }
             randomAccessFile.close();
             randomAccessFile = new RandomAccessFile(CACHE_DIR + fileName, "r");
+            viceReader.close();
         }
-        viceReader.close();
     }
 
     private boolean search(String filename){
@@ -82,30 +83,28 @@ public class VenusFile {
     }
 
     public void close() throws IOException {
-        if(mode.equals("rw")){
-            ViceWriter viceWriter = null;
-            if(written){
-                randomAccessFile.seek(0);
-                byte [] read = new byte[venus.getSize()];
-                int readCount;
-                viceWriter = venus.getVice().upload(fileName, mode, venus.getVenusCB());
-                while((readCount = randomAccessFile.read(read)) != -1){
-                    if(venus.getSize() > readCount){
-                        viceWriter.write(Arrays.copyOf(read, readCount));
-                    } else{
-                        viceWriter.write(read);
-                    }
-                }
-                if(randomAccessFile.length() != fileSize){
-                    viceWriter.setLength(randomAccessFile.length());
+        ViceWriter viceWriter = null;
+        if(written){
+            randomAccessFile.seek(0);
+            byte [] read = new byte[venus.getSize()];
+            int readCount;
+            viceWriter = venus.getVice().upload(fileName, mode, venus.getVenusCB());
+            while((readCount = randomAccessFile.read(read)) != -1){
+                if(venus.getSize() < readCount){
+                    viceWriter.write(Arrays.copyOf(read, readCount));
+                } else{
+                    viceWriter.write(read);
                 }
             }
-            else if(randomAccessFile.length() != fileSize){
-                viceWriter = venus.getVice().upload(fileName, mode, venus.getVenusCB());
+            if(randomAccessFile.length() != fileSize){
                 viceWriter.setLength(randomAccessFile.length());
             }
-            if (viceWriter != null) viceWriter.close();
         }
+        else if(randomAccessFile.length() != fileSize){
+            viceWriter = venus.getVice().upload(fileName, mode, venus.getVenusCB());
+            viceWriter.setLength(randomAccessFile.length());
+        }
+        if (viceWriter != null) viceWriter.close();
         randomAccessFile.close();
     }
 }
