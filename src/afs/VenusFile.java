@@ -8,103 +8,112 @@ import java.util.Arrays;
 
 public class VenusFile {
 
+    private boolean modified;
     private static final String CACHE_DIR = "Cache/";
-    private RandomAccessFile randomAccessFile;
-    private String mode;
-    private Venus venus;
-    private String fileName;
     private long fileSize;
-    private boolean written;
+    private Venus venus;
+    private File file;
+    private RandomAccessFile cachedFile;
+    private String fileName;
+    private String accessMode;
 
+    public VenusFile(Venus venus, String fileName, String accessMode) throws IOException {
 
-    public VenusFile(Venus venus, String fileName, String mode) throws IOException {
-        ViceReader viceReader;
-        this.venus = venus;
-        this.mode = mode;
-        this.fileName = fileName;
-        this.written = false;
-        randomAccessFile = new RandomAccessFile(CACHE_DIR + fileName, mode);
-        viceReader = venus.getVice().download(fileName, mode, this.venus.getVenusCB());
-        try{
-            if(!search(this.fileName)){
-                byte [] readBytes;
-                while((readBytes = viceReader.read(venus.getSize())) != null){
-                    randomAccessFile.write(readBytes);
+        ViceReader reader;
+        try {
+            this.venus = venus;
+            file = new File(CACHE_DIR +fileName);
+            this.fileName =fileName;
+            this.accessMode = accessMode;
+            this.modified = false;
+            if(accessMode.equals("rw")){
+                if(file.exists()){
+                    System.out.println("File "+fileName+" is already on cache.");
+                    cachedFile = new RandomAccessFile(file, accessMode);
+
                 }
-                randomAccessFile.seek(0);
-            }
-            this.fileSize = randomAccessFile.length();
-            viceReader.close();
-        }
-        catch(FileNotFoundException e){
-            randomAccessFile = new RandomAccessFile(CACHE_DIR + fileName,"rw");
-            byte [] readBytes;
-            while((readBytes = viceReader.read(venus.getSize())) != null){
-                randomAccessFile.write(readBytes);
-            }
-            randomAccessFile.close();
-            randomAccessFile = new RandomAccessFile(CACHE_DIR + fileName, "r");
-            viceReader.close();
-        }
-    }
-
-    private boolean search(String filename){
-        try{
-            File cacheFiles = new File("Cache");
-            if(!cacheFiles.exists()) cacheFiles.mkdir();
-            if (cacheFiles.isDirectory()) {
-                for (File file: cacheFiles.listFiles()){
-                    if(filename.equals(file.getName())){
-                        return true;
+                else{
+                    byte [] bytes;
+                    cachedFile = new RandomAccessFile(file, accessMode);
+                    reader = venus.getVice().download(fileName, accessMode, venus.getVenusCB());
+                    while((bytes = reader.read(venus.getSize()))!= null){
+                        cachedFile.write(bytes);
                     }
+                    cachedFile.seek(0);
+                    reader.close();
                 }
+                this.fileSize = cachedFile.length();
+            }else{
+                cachedFile = new RandomAccessFile(file, accessMode);
             }
-        }catch(Exception e){
-            e.printStackTrace();
+
         }
-        return false;
+        catch (FileNotFoundException e) {
+            byte [] bytes;
+            reader = venus.getVice().download(fileName, accessMode, venus.getVenusCB());
+            cachedFile = new RandomAccessFile(file,"rw");
+
+            while((bytes = reader.read(venus.getSize()))!= null){
+                cachedFile.write(bytes);
+            }
+
+            cachedFile.close();
+            cachedFile = new RandomAccessFile(file, "r");
+
+            reader.close();
+        }
     }
 
     public int read(byte[] output) throws IOException {
-        return randomAccessFile.read(output);
+        return cachedFile.read(output);
     }
 
     public void write(byte[] input) throws IOException {
-        written = true;
-        randomAccessFile.write(input);
+        modified = true;
+        cachedFile.write(input);
     }
 
     public void seek(long position) throws IOException {
-        randomAccessFile.seek(position);
+        cachedFile.seek(position);
     }
 
-    public void setLength(long length) throws IOException {
-        randomAccessFile.setLength(length);
+    public void setLength(long l) throws IOException {
+        cachedFile.setLength(l);
     }
 
     public void close() throws IOException {
-        ViceWriter viceWriter = null;
-        if(written){
-            randomAccessFile.seek(0);
-            byte [] read = new byte[venus.getSize()];
-            int readCount;
-            viceWriter = venus.getVice().upload(fileName, mode, venus.getVenusCB());
-            while((readCount = randomAccessFile.read(read)) != -1){
-                if(venus.getSize() < readCount){
-                    viceWriter.write(Arrays.copyOf(read, readCount));
-                } else{
-                    viceWriter.write(read);
+
+        if(this.accessMode.equals("rw")){
+            ViceWriter writer;
+            if(!this.modified){
+                if(this.fileSize != cachedFile.length()){
+                    writer = venus.getVice().upload(fileName, accessMode, venus.getVenusCB());
+                    writer.setLength(cachedFile.length());
+                    writer.close();
                 }
             }
-            if(randomAccessFile.length() != fileSize){
-                viceWriter.setLength(randomAccessFile.length());
+            else{
+                cachedFile.seek(0);
+                byte [] buffer = new byte[venus.getSize()];
+                int readCount = 0;
+                writer = venus.getVice().upload(fileName, accessMode, venus.getVenusCB());
+                while((readCount = cachedFile.read(buffer)) != -1){
+                    if(venus.getSize() > readCount){
+                        writer.write(Arrays.copyOf(buffer, readCount));
+                    }
+                    else{
+                        writer.write(buffer);
+
+                    }
+                }
+                if(this.fileSize != cachedFile.length()){
+                    writer.setLength(cachedFile.length());
+                }
+                writer.close();
             }
         }
-        else if(randomAccessFile.length() != fileSize){
-            viceWriter = venus.getVice().upload(fileName, mode, venus.getVenusCB());
-            viceWriter.setLength(randomAccessFile.length());
-        }
-        if (viceWriter != null) viceWriter.close();
-        randomAccessFile.close();
+        cachedFile.close();
     }
+
 }
+
